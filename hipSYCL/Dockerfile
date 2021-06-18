@@ -4,12 +4,17 @@ LABEL description="Development environment for using hipSYCL with cuda 10.1"
 
 # Install basic tools
 RUN apt update \
- && apt install -y vim git wget ninja-build
+ && apt install -y vim git wget ninja-build lsb-release software-properties-common
 
-# Update to newer gcc for <filesystem> support
-RUN apt install -y gcc-8 g++-8 libstdc++-8-dev \
- && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7 \
- && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+# Install current compiler toolchain
+RUN wget https://apt.llvm.org/llvm.sh \
+ && chmod +x llvm.sh \
+ && ./llvm.sh 11 \
+ && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 11 \
+ && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 11 \
+ && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 30 \
+ && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 30 \
+ && apt install -y libstdc++-8-dev
 
 # Install cmake
 RUN mkdir system \
@@ -20,17 +25,20 @@ RUN mkdir system \
 ENV PATH="/system/cmake-3.20.4-linux-x86_64/bin:${PATH}"
 
 # Install hipSYCL dependencies
-RUN apt install -y python3 libboost-fiber-dev libboost-context-dev llvm-10 clang-10 libclang-10-dev
+RUN apt install -y python3 libboost-fiber-dev libboost-context-dev libclang-11-dev
 
 # Get hipSYCL
 RUN cd system \
- && git clone https://github.com/illuhad/hipSYCL.git
+ && git clone https://github.com/illuhad/hipSYCL.git \
+ # Ugly hack, but this is needed as we have a libstdc++ 8 which requires this for <filesystem> and newer
+ # libstdc++ versions irritate CUDA
+ && echo "target_link_libraries(hipSYCL-rt PUBLIC stdc++fs)" >> /system/hipSYCL/src/runtime/CMakeLists.txt
 
-# Compile hipSYCL
-RUn cd system/hipSYCL \
+# Build hipSYCL
+RUN cd system/hipSYCL \
  && mkdir build \
  && cd build \
- && cmake .. -GNinja \
+ && cmake .. -GNinja -DWITH_CUDA_BACKEND=ON \
  && cmake --build . --target install
 
 CMD ["bash"]
