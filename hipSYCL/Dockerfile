@@ -3,6 +3,9 @@ LABEL maintainer="Robert Wilbrandt <robert@stamm-wilbrandt.de>"
 LABEL description="Development environment for using hipSYCL with cuda 10.1"
 
 ARG HIPSYCL_TARGETS
+RUN test -n "$HIPSYCL_TARGETS"
+
+ENV HIPSYCL_TARGETS=${HIPSYCL_TARGETS}
 
 # Install basic tools
 RUN apt update \
@@ -57,7 +60,7 @@ RUN cd system \
  && cd syclinfo \
  && mkdir build \
  && cd build \
- && HIPSYCL_TARGETS=${HIPSYCL_TARGETS} cmake .. -GNinja -DCMAKE_CXX_COMPILER=syclcc \
+ && cmake .. -GNinja -DCMAKE_CXX_COMPILER=syclcc \
  && cmake --build . \
  && ln -s $(pwd)/syclinfo /usr/local/bin
 
