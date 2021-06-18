@@ -12,7 +12,9 @@ RUN apt update \
  && apt install -y vim git wget ninja-build lsb-release software-properties-common
 
 # Install current compiler toolchain
-RUN wget https://apt.llvm.org/llvm.sh \
+RUN mkdir system \
+ && cd system \
+ && wget https://apt.llvm.org/llvm.sh \
  && chmod +x llvm.sh \
  && ./llvm.sh 11 \
  && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 11 \
@@ -22,8 +24,7 @@ RUN wget https://apt.llvm.org/llvm.sh \
  && apt install -y libstdc++-8-dev
 
 # Install cmake
-RUN mkdir system \
- && cd system \
+RUN cd system \
  && wget https://cmake.org/files/v3.20/cmake-3.20.4-linux-x86_64.tar.gz \
  && tar xf cmake-3.20.4-linux-x86_64.tar.gz
 
