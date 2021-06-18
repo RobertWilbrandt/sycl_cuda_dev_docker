@@ -65,4 +65,12 @@ RUN cd system \
  && cmake --build . \
  && ln -s $(pwd)/syclinfo /usr/local/bin
 
+# Set up networking and ssh server for remote profiling
+RUN apt install -y iproute2 openssh-server \
+ && sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config \
+ && mkdir /var/run/sshd \
+ && echo 'root:root' | chpasswd
+
+COPY ./entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]
