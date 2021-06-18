@@ -24,8 +24,16 @@ RUN mkdir system \
 
 ENV PATH="/system/cmake-3.20.4-linux-x86_64/bin:${PATH}"
 
+# Install current boost from source
+RUN cd system \
+ && wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz \
+ && tar xf boost_1_76_0.tar.gz \
+ && cd boost_1_76_0 \
+ && ./bootstrap.sh --prefix=/usr \
+ && ./b2 link=static,shared install -j$(nproc)
+
 # Install hipSYCL dependencies
-RUN apt install -y python3 libboost-fiber-dev libboost-context-dev libclang-11-dev
+RUN apt install -y python3 libclang-11-dev
 
 # Get hipSYCL
 RUN cd system \
