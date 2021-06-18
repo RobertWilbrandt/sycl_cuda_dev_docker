@@ -2,6 +2,8 @@ FROM nvidia/cuda:10.1-devel-ubuntu18.04
 LABEL maintainer="Robert Wilbrandt <robert@stamm-wilbrandt.de>"
 LABEL description="Development environment for using hipSYCL with cuda 10.1"
 
+ARG HIPSYCL_TARGETS
+
 # Install basic tools
 RUN apt update \
  && apt install -y vim git wget ninja-build lsb-release software-properties-common
@@ -48,5 +50,15 @@ RUN cd system/hipSYCL \
  && cd build \
  && cmake .. -GNinja -DWITH_CUDA_BACKEND=ON \
  && cmake --build . --target install
+
+# Get, build and install syclinfo
+RUN cd system \
+ && git clone https://github.com/illuhad/syclinfo.git \
+ && cd syclinfo \
+ && mkdir build \
+ && cd build \
+ && HIPSYCL_TARGETS=${HIPSYCL_TARGETS} cmake .. -GNinja -DCMAKE_CXX_COMPILER=syclcc \
+ && cmake --build . \
+ && ln -s $(pwd)/syclinfo /usr/local/bin
 
 CMD ["bash"]
